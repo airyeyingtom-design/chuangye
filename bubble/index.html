@@ -38,20 +38,21 @@ while(bgmNext<AC.currentTime+.6){const i=bgmI,m=mel[i%32];if(m)btone(m,.22,"tria
 document.addEventListener("visibilitychange",()=>{if(!document.hidden&&AC)AC.resume()});
 document.getElementById("mute").onpointerdown=e=>{e.stopPropagation();initAudio();bgmOn=!bgmOn;master.gain.value=bgmOn?.6:0;if(AC.state==="suspended")AC.resume();e.target.textContent=bgmOn?"🔊":"🔇"};
 addEventListener("pointerdown",()=>{initAudio();if(AC.state==="suspended")AC.resume()});
+function buzz(p){try{if(navigator.vibrate)navigator.vibrate(p)}catch(e){}}
 let s=0,bs=[],lv=1,t=0,left=60,over=false,best=+localStorage.bestBubble||0,crowd=0;
 function upd(){document.getElementById("s").textContent=s;document.getElementById("lv").textContent=lv;document.getElementById("tm").textContent=left;document.getElementById("best").textContent=best}
 function end(){over=true;sfx.end();if(s>best){best=s;localStorage.bestBubble=s}upd();const ov=document.getElementById("over");
 ov.innerHTML="时间到！<br>得分 "+s+"<br>最高 "+best+"<br><br><span style='font-size:20px'>"+(s>=best?"新纪录！你太棒了 🎉":"已经很厉害啦 💖")+"</span><br><br><button id=rb style='font-size:22px;padding:10px 28px;border:0;border-radius:30px;background:#ff8fb1;color:#fff'>再来一局</button>";
 ov.style.display="flex";document.getElementById("rb").onclick=()=>{bs.forEach(b=>b.d.remove());bs=[];s=0;lv=1;left=60;over=false;ov.style.display="none";upd()}}
 setInterval(()=>{if(over)return;left--;const pl=lv;lv=1+Math.floor((60-left)/15);if(lv>pl){sfx.lv();say("升到第"+lv+"关！")}
-const n=bs.filter(b=>!b.bomb).length;if(bs.length>=20){s=Math.max(0,s-2);say("太挤啦！-2，快戳");sfx.crowd();}
+const n=bs.filter(b=>!b.bomb).length;if(bs.length>=20){s=Math.max(0,s-2);say("太挤啦！-2，快戳");sfx.crowd();buzz(40);}
 if(left<=0)end();upd()},1000);upd();
 function spawn(){const r=40+Math.random()*35,d=document.createElement("div");d.className="b";
 d.style.width=d.style.height=r*2+"px";d.style.background=cols[Math.random()*cols.length|0];const bomb=Math.random()<Math.min(.12+lv*.05,.45);d.textContent=bomb?"💣":em[Math.random()*em.length|0];if(bomb)d.classList.add("bomb");
 const o={bomb,born:t,d,r,x:Math.random()*(W()-2*r),y:Math.random()*(H()*0.4),vx:(Math.random()-.5)*4,vy:0,v:.6+Math.random()*1.2,w:Math.random()*6};
 d.onpointerdown=e=>{e.preventDefault();if(!over)pop(o)};document.body.appendChild(d);bs.push(o)}
-function pop(o){if(o.bomb){sfx.bomb();s=Math.max(0,s-5);upd();document.body.classList.remove("hit");void document.body.offsetWidth;document.body.classList.add("hit");say("💥 炸弹！-5");o.d.remove();bs=bs.filter(b=>b!==o);return}
-sfx.pop(o.r);const bonus=o.r<50?2:1;s+=bonus;upd();if(bonus==2)say("小泡泡 +2");
+function pop(o){if(o.bomb){sfx.bomb();buzz([120,40,200]);s=Math.max(0,s-5);upd();document.body.classList.remove("hit");void document.body.offsetWidth;document.body.classList.add("hit");say("💥 炸弹！-5");o.d.remove();bs=bs.filter(b=>b!==o);return}
+sfx.pop(o.r);buzz(18);const bonus=o.r<50?2:1;s+=bonus;upd();if(bonus==2)say("小泡泡 +2");
 for(let i=0;i<8;i++){const p=document.createElement("div");p.className="p";p.textContent=em[Math.random()*em.length|0];
 p.style.left=o.x+o.r+"px";p.style.top=o.y+o.r+"px";p.style.setProperty("--x",(Math.random()-.5)*200+"px");p.style.setProperty("--y",(Math.random()-.5)*200+"px");
 document.body.appendChild(p);setTimeout(()=>p.remove(),1000)}
