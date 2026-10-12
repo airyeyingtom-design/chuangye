@@ -1,0 +1,81 @@
+<!DOCTYPE html><html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>戳泡泡·开心一下</title>
+<style>
+html,body{margin:0;height:100%;overflow:hidden;font-family:-apple-system,"PingFang SC",sans-serif;background:linear-gradient(160deg,#ffd6e8,#c9e7ff 60%,#d9ffd6);touch-action:none}
+#hud{position:fixed;top:12px;left:0;right:0;text-align:center;font-size:20px;color:#5a4a7a;font-weight:700;z-index:5}
+#msg{position:fixed;top:45%;left:0;right:0;text-align:center;font-size:28px;color:#ff5c8a;font-weight:800;opacity:0;transition:opacity .4s;z-index:6;padding:0 20px;text-shadow:0 2px 8px #fff}
+.b{position:absolute;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:28px;
+box-shadow:inset -8px -10px 18px rgba(255,255,255,.6),inset 6px 6px 14px rgba(255,255,255,.9),0 4px 14px rgba(0,0,0,.08)}
+.bomb{background:radial-gradient(circle at 35% 35%,#777,#222)!important;animation:sh .3s infinite alternate}@keyframes sh{to{filter:drop-shadow(0 0 8px #f33)}}
+body.hit{animation:hit .3s}@keyframes hit{25%{transform:translate(-8px,4px)}50%{transform:translate(8px,-4px)}75%{transform:translate(-4px,2px)}}
+.p{position:absolute;font-size:22px;pointer-events:none;animation:f 1s ease-out forwards}
+@keyframes f{to{transform:translate(var(--x),var(--y)) scale(.3);opacity:0}}
+</style></head><body>
+<div id="hud">得分 <span id="s">0</span> ｜ 第<span id="lv">1</span>关 ｜ ⏱<span id="tm">60</span>s ｜ 最高 <span id="best">0</span></div><div id="over" style="display:none;position:fixed;inset:0;background:rgba(255,255,255,.85);z-index:9;flex-direction:column;align-items:center;justify-content:center;font-size:26px;color:#5a4a7a;font-weight:800;text-align:center"></div><button id="mute" style="position:fixed;right:12px;bottom:14px;z-index:8;font-size:24px;border:0;border-radius:50%;width:48px;height:48px;background:#fff9;">🔊</button><div id="msg"></div>
+<script>
+const W=()=>innerWidth,H=()=>innerHeight,em=["😊","🌸","⭐","🍀","🎈","💖","🌈","🍓","🐱","☀️"];
+const words=["你已经很棒了","今天辛苦啦","坏心情，走开！","你值得被温柔对待","慢慢来，一切都会好","深呼吸，你很好","给自己一个拥抱","明天会更好","你是最棒的CEO","笑一个嘛 😄"];
+const cols=["#ffb3c7","#b3e0ff","#c8f7c5","#fff1a8","#e2c6ff","#ffd1a8"];
+let AC=null,master=null,bgmOn=true;
+function initAudio(){if(AC)return;AC=new (window.AudioContext||window.webkitAudioContext)();master=AC.createGain();master.gain.value=.6;master.connect(AC.destination);startBGM()}
+function tone(f,dur,type="sine",vol=.3,slide=0,when=0){if(!AC)return;const t0=AC.currentTime+when,o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.setValueAtTime(f,t0);if(slide)o.frequency.exponentialRampToValueAtTime(Math.max(30,f*slide),t0+dur);
+g.gain.setValueAtTime(vol,t0);g.gain.exponentialRampToValueAtTime(.001,t0+dur);o.connect(g);g.connect(master);o.start(t0);o.stop(t0+dur+.02)}
+function noise(dur,vol=.5){if(!AC)return;const b=AC.createBuffer(1,AC.sampleRate*dur,AC.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*(1-i/d.length)**2;
+const n=AC.createBufferSource(),g=AC.createGain(),f=AC.createBiquadFilter();f.type="lowpass";f.frequency.value=900;n.buffer=b;g.gain.value=vol;n.connect(f);f.connect(g);g.connect(master);n.start()}
+const sfx={pop:r=>{const f=900*50/r;tone(f,.12,"sine",.35,.4);tone(f*2,.06,"triangle",.12,.6)},
+bomb:()=>{noise(.6,.8);tone(110,.5,"sawtooth",.25,.3)},
+crowd:()=>tone(160,.18,"square",.08,.9),
+lv:()=>[523,659,784].forEach((f,i)=>tone(f,.15,"triangle",.2,0,i*.09)),
+end:()=>[523,659,784,1047].forEach((f,i)=>tone(f,.3,"triangle",.25,0,i*.15))};
+let bgmT=null,bgmNext=0,bgmI=0,bgmGain=null;
+function btone(f,dur,type,vol,at){const o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.value=f;g.gain.setValueAtTime(vol,at);g.gain.exponentialRampToValueAtTime(.001,at+dur);o.connect(g);g.connect(bgmGain);o.start(at);o.stop(at+dur+.02)}
+function startBGM(){if(bgmT)return;bgmGain=AC.createGain();bgmGain.gain.value=1;bgmGain.connect(master);
+const mel=[523,587,659,784,880,784,659,587,523,659,784,1047,880,784,659,0,587,659,784,659,587,523,440,523,587,659,523,440,392,440,523,0],bass=[131,131,175,175,196,196,165,165,147,147,196,196,131,131,98,98],step=.23;
+bgmNext=AC.currentTime+.1;
+bgmT=setInterval(()=>{if(AC.state==="suspended")AC.resume();
+if(AC.currentTime>bgmNext+1)bgmNext=AC.currentTime+.05;
+while(bgmNext<AC.currentTime+.6){const i=bgmI,m=mel[i%32];if(m)btone(m,.22,"triangle",.07,bgmNext);if(i%2==0)btone(bass[(i/2|0)%16],.4,"sine",.12,bgmNext);if(i%4==2)btone(2000,.03,"square",.015,bgmNext);bgmI++;bgmNext+=step}},100)}
+document.addEventListener("visibilitychange",()=>{if(!document.hidden&&AC)AC.resume()});
+document.getElementById("mute").onpointerdown=e=>{e.stopPropagation();initAudio();bgmOn=!bgmOn;master.gain.value=bgmOn?.6:0;if(AC.state==="suspended")AC.resume();e.target.textContent=bgmOn?"🔊":"🔇"};
+addEventListener("pointerdown",()=>{initAudio();if(AC.state==="suspended")AC.resume()});
+let s=0,bs=[],lv=1,t=0,left=60,over=false,best=+localStorage.bestBubble||0,crowd=0;
+function upd(){document.getElementById("s").textContent=s;document.getElementById("lv").textContent=lv;document.getElementById("tm").textContent=left;document.getElementById("best").textContent=best}
+function end(){over=true;sfx.end();if(s>best){best=s;localStorage.bestBubble=s}upd();const ov=document.getElementById("over");
+ov.innerHTML="时间到！<br>得分 "+s+"<br>最高 "+best+"<br><br><span style='font-size:20px'>"+(s>=best?"新纪录！你太棒了 🎉":"已经很厉害啦 💖")+"</span><br><br><button id=rb style='font-size:22px;padding:10px 28px;border:0;border-radius:30px;background:#ff8fb1;color:#fff'>再来一局</button>";
+ov.style.display="flex";document.getElementById("rb").onclick=()=>{bs.forEach(b=>b.d.remove());bs=[];s=0;lv=1;left=60;over=false;ov.style.display="none";upd()}}
+setInterval(()=>{if(over)return;left--;const pl=lv;lv=1+Math.floor((60-left)/15);if(lv>pl){sfx.lv();say("升到第"+lv+"关！")}
+const n=bs.filter(b=>!b.bomb).length;if(bs.length>=20){s=Math.max(0,s-2);say("太挤啦！-2，快戳");sfx.crowd();}
+if(left<=0)end();upd()},1000);upd();
+function spawn(){const r=40+Math.random()*35,d=document.createElement("div");d.className="b";
+d.style.width=d.style.height=r*2+"px";d.style.background=cols[Math.random()*cols.length|0];const bomb=Math.random()<Math.min(.12+lv*.05,.45);d.textContent=bomb?"💣":em[Math.random()*em.length|0];if(bomb)d.classList.add("bomb");
+const o={bomb,born:t,d,r,x:Math.random()*(W()-2*r),y:Math.random()*(H()*0.4),vx:(Math.random()-.5)*4,vy:0,v:.6+Math.random()*1.2,w:Math.random()*6};
+d.onpointerdown=e=>{e.preventDefault();if(!over)pop(o)};document.body.appendChild(d);bs.push(o)}
+function pop(o){if(o.bomb){sfx.bomb();s=Math.max(0,s-5);upd();document.body.classList.remove("hit");void document.body.offsetWidth;document.body.classList.add("hit");say("💥 炸弹！-5");o.d.remove();bs=bs.filter(b=>b!==o);return}
+sfx.pop(o.r);const bonus=o.r<50?2:1;s+=bonus;upd();if(bonus==2)say("小泡泡 +2");
+for(let i=0;i<8;i++){const p=document.createElement("div");p.className="p";p.textContent=em[Math.random()*em.length|0];
+p.style.left=o.x+o.r+"px";p.style.top=o.y+o.r+"px";p.style.setProperty("--x",(Math.random()-.5)*200+"px");p.style.setProperty("--y",(Math.random()-.5)*200+"px");
+document.body.appendChild(p);setTimeout(()=>p.remove(),1000)}
+o.d.remove();bs=bs.filter(b=>b!==o);if(s%7==0)say(words[Math.random()*words.length|0]);
+}
+function say(t){const m=document.getElementById("msg");m.textContent=t;m.style.opacity=1;clearTimeout(m.t);m.t=setTimeout(()=>m.style.opacity=0,1800)}
+let gx=0,gy=1,tilt=false;
+function onOri(e){if(e.gamma==null)return;tilt=true;
+gx=Math.max(-1.6,Math.min(1.6,e.gamma/22));gy=Math.max(-1.6,Math.min(1.6,e.beta/22))}
+function enable(){if(typeof DeviceOrientationEvent!=="undefined"&&DeviceOrientationEvent.requestPermission){DeviceOrientationEvent.requestPermission().then(r=>{if(r==="granted"){addEventListener("deviceorientation",onOri);say("重力感已开启，歪手机试试 📱")}}).catch(()=>{})}else{addEventListener("deviceorientation",onOri)}removeEventListener("pointerdown",enable)}
+addEventListener("pointerdown",enable);enable();
+const G=1.1;
+(function loop(){t++;if(!over&&t%Math.max(8,28-lv*5)==0&&bs.length<26)spawn();
+for(const o of bs.slice())if(o.bomb&&t-o.born>420){o.d.remove();bs=bs.filter(b=>b!==o)}
+for(const o of bs){const m=o.r/50;o.vx+=gx*G*m;o.vy+=gy*G*m;o.vx*=0.985;o.vy*=0.985;o.x+=o.vx;o.y+=o.vy;
+const R=2*o.r;
+if(o.x<0){o.x=0;o.vx=-o.vx*.55}if(o.x>W()-R){o.x=W()-R;o.vx=-o.vx*.55}
+if(o.y<0){o.y=0;o.vy=-o.vy*.55}if(o.y>H()-R){o.y=H()-R;o.vy=-o.vy*.55}}
+for(let k=0;k<3;k++)for(let i=0;i<bs.length;i++)for(let j=i+1;j<bs.length;j++){const a=bs[i],c=bs[j];
+const ax=a.x+a.r,ay=a.y+a.r,cx=c.x+c.r,cy=c.y+c.r,dx=cx-ax,dy=cy-ay,d=Math.hypot(dx,dy)||.01,min=a.r+c.r;
+if(d<min){const nx=dx/d,ny=dy/d,ov=min-d,ma=a.r*a.r,mc=c.r*c.r,tot=ma+mc;
+a.x-=nx*ov*mc/tot;a.y-=ny*ov*mc/tot;c.x+=nx*ov*ma/tot;c.y+=ny*ov*ma/tot;
+const rv=(c.vx-a.vx)*nx+(c.vy-a.vy)*ny;if(rv<0){const imp=-1.5*rv/tot;a.vx-=imp*mc*nx;a.vy-=imp*mc*ny;c.vx+=imp*ma*nx;c.vy+=imp*ma*ny}}}
+for(const o of bs)o.d.style.transform=`translate(${o.x}px,${o.y}px) rotate(${o.vx*3}deg)`;
+requestAnimationFrame(loop)})();
+say("60秒挑战！别碰💣(-5)，别让屏幕挤满(-2/秒)");
+</script></body></html>
