@@ -268,7 +268,7 @@ def make_music(path):
 def main():
     music = f"{OUT_DIR}/music.wav"
     make_music(music)
-    out = f"{OUT_DIR}/两个孩子的一生.mp4"
+    out = f"{OUT_DIR}/two_lives.mp4"
     proc = subprocess.Popen([
         "ffmpeg", "-y", "-loglevel", "error",
         "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}", "-r", str(FPS), "-i", "-",
