@@ -1,0 +1,80 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="assets/theme.css">
+<style>
+  .bots {
+    position: absolute;
+    inset: 40px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 18px;
+  }
+  .bot {
+    aspect-ratio: 1;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    display: grid;
+    place-items: center;
+    background: rgba(255, 94, 58, 0.08);
+    font-size: 42px;
+    color: var(--warn);
+  }
+  .caption {
+    position: absolute;
+    left: 48px;
+    right: 48px;
+    bottom: 48px;
+    font-size: 32px;
+    color: var(--muted);
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="grain"></div>
+  <div class="bar"><strong>PITFALL 05</strong><span>数据造假</span></div>
+  <div class="num" id="num">05</div>
+  <h2 class="title" id="title">刷量买粉<br>假繁荣</h2>
+  <p class="sub" id="sub">粉丝涨了，互动全是机器人，转化一塌糊涂。</p>
+  <div class="panel" id="panel">
+    <div class="bots" id="bots"></div>
+    <div class="caption">真实客户 ≈ 0</div>
+  </div>
+  <div class="progress"><i id="bar"></i></div>
+</div>
+<script type="module">
+function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+function ease(t) { return 1 - Math.pow(1 - clamp(t, 0, 1), 3); }
+const bots = document.getElementById("bots");
+for (let i = 0; i < 12; i++) {
+  const d = document.createElement("div");
+  d.className = "bot";
+  d.textContent = "BOT";
+  d.dataset.i = String(i);
+  bots.appendChild(d);
+}
+window.film = {
+  duration: 6.5,
+  ready: document.fonts.ready,
+  frame(t) {
+    const e = (d, delay = 0) => ease((t - delay) / d);
+    for (const id of ["num", "title", "sub", "panel"]) {
+      const el = document.getElementById(id);
+      const delay = id === "panel" ? 0.35 : 0.1;
+      el.style.opacity = String(e(0.5, delay));
+      el.style.transform = `translateY(${(1 - e(0.55, delay)) * 28}px)`;
+    }
+    [...bots.children].forEach((el, i) => {
+      const appear = e(0.35, 0.8 + i * 0.12);
+      el.style.opacity = String(appear);
+      el.style.transform = `scale(${0.7 + 0.3 * appear})`;
+    });
+    document.getElementById("bar").style.width = `${(t / 6.5) * 100}%`;
+  }
+};
+</script>
+</body>
+</html>

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>代运营容易被坑的原因</title>
+  <style>
+    :root {
+      --ink: #0b1017;
+      --paper: #f4efe6;
+      --muted: #9aa6b5;
+      --amber: #e8a01c;
+      --warn: #ff5e3a;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      background:
+        radial-gradient(ellipse 80% 50% at 20% 0%, rgba(232, 160, 28, 0.18), transparent 55%),
+        linear-gradient(165deg, #0b1017, #121a26 55%, #080c12);
+      color: var(--paper);
+      font-family: "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+      padding: 48px 20px 80px;
+    }
+    main {
+      max-width: 960px;
+      margin: 0 auto;
+    }
+    .eyebrow {
+      color: var(--amber);
+      letter-spacing: 0.22em;
+      font-size: 13px;
+      margin-bottom: 16px;
+    }
+    h1 {
+      font-size: clamp(28px, 5vw, 44px);
+      line-height: 1.25;
+      margin-bottom: 12px;
+      font-weight: 700;
+    }
+    h1 em { font-style: normal; color: var(--warn); }
+    .lead {
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.6;
+      margin-bottom: 28px;
+      max-width: 36em;
+    }
+    video {
+      width: 100%;
+      display: block;
+      background: #000;
+      border: 1px solid rgba(244, 239, 230, 0.12);
+    }
+    .meta {
+      margin-top: 16px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px 20px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    a { color: var(--amber); }
+    ol {
+      margin-top: 40px;
+      padding-left: 1.2em;
+      color: var(--muted);
+      line-height: 1.8;
+    }
+    ol strong { color: var(--paper); font-weight: 600; }
+  </style>
+</head>
+<body>
+  <main>
+    <p class="eyebrow">OPEN BRIEF</p>
+    <h1>代运营，为什么容易被<em>坑</em>？</h1>
+    <p class="lead">约 57 秒短片：六个最常见的坑，以及签约前该问清的三句话。</p>
+    <video controls playsinline preload="metadata" poster="" src="../daiyunying-pitfalls/daiyunying-pitfalls.mp4">
+      你的浏览器不支持视频播放。
+    </video>
+    <div class="meta">
+      <span>用 OpenFilm 制作</span>
+      <a href="../daiyunying-pitfalls/daiyunying-pitfalls.mp4" download>下载 MP4</a>
+      <a href="../">返回首页</a>
+    </div>
+    <ol>
+      <li><strong>只谈粉丝，不谈转化</strong> — 虚荣指标当业绩</li>
+      <li><strong>合同含糊，交付说不清</strong> — 无法验收</li>
+      <li><strong>要权限，不给数据</strong> — 账号失控</li>
+      <li><strong>低价诱饵，后期加价</strong> — 报价陷阱</li>
+      <li><strong>刷量买粉，假繁荣</strong> — 数据造假</li>
+      <li><strong>换人频繁，没人负责</strong> — 责任真空</li>
+    </ol>
+  </main>
+</body>
+</html>
