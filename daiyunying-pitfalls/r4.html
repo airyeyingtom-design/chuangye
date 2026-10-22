@@ -1,0 +1,87 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="assets/theme.css">
+<style>
+  .price {
+    position: absolute;
+    left: 48px;
+    right: 48px;
+    top: 80px;
+  }
+  .hook {
+    font-size: 34px;
+    color: var(--muted);
+    margin-bottom: 20px;
+  }
+  .cheap {
+    font-family: var(--font-display);
+    font-size: 92px;
+    color: #6dcf8a;
+    font-weight: 700;
+  }
+  .cheap small { font-size: 36px; font-family: var(--font-sans); color: var(--muted); }
+  .addons {
+    margin-top: 56px;
+  }
+  .addons div {
+    display: flex;
+    justify-content: space-between;
+    padding: 22px 0;
+    border-top: 1px solid var(--line);
+    font-size: 34px;
+  }
+  .addons .cost { color: var(--warn); font-weight: 700; }
+  .total {
+    margin-top: 28px;
+    font-family: var(--font-display);
+    font-size: 48px;
+    color: var(--warn);
+  }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="grain"></div>
+  <div class="bar"><strong>PITFALL 04</strong><span>价格陷阱</span></div>
+  <div class="num" id="num">04</div>
+  <h2 class="title" id="title">低价诱饵<br>后期加价</h2>
+  <p class="sub" id="sub">先用超低月费钓签约，再以投放、剪辑、加急不断加钱。</p>
+  <div class="panel" id="panel">
+    <div class="price">
+      <div class="hook">宣传价</div>
+      <div class="cheap" id="cheap">¥999 <small>/月</small></div>
+      <div class="addons" id="addons">
+        <div><span>投流费</span><span class="cost">+¥8,000</span></div>
+        <div><span>加急剪辑</span><span class="cost">+¥2,500</span></div>
+        <div><span>节日专项</span><span class="cost">+¥3,000</span></div>
+      </div>
+      <div class="total" id="total">实际 ≈ ¥14,499</div>
+    </div>
+  </div>
+  <div class="progress"><i id="bar"></i></div>
+</div>
+<script type="module">
+function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+function ease(t) { return 1 - Math.pow(1 - clamp(t, 0, 1), 3); }
+window.film = {
+  duration: 7,
+  ready: document.fonts.ready,
+  frame(t) {
+    const e = (d, delay = 0) => ease((t - delay) / d);
+    for (const id of ["num", "title", "sub", "panel"]) {
+      const el = document.getElementById(id);
+      const delay = id === "panel" ? 0.4 : 0.1;
+      el.style.opacity = String(e(0.5, delay));
+      el.style.transform = `translateY(${(1 - e(0.55, delay)) * 28}px)`;
+    }
+    document.getElementById("addons").style.opacity = String(e(0.5, 1.8));
+    document.getElementById("total").style.opacity = String(e(0.45, 3.0));
+    document.getElementById("cheap").style.opacity = String(t > 2.5 ? 0.35 : 1);
+    document.getElementById("bar").style.width = `${(t / 7) * 100}%`;
+  }
+};
+</script>
+</body>
+</html>
