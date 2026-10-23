@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>E2-lite · 迷你公众号动效编辑器</title>
+  <link rel="stylesheet" href="css/editor.css">
+</head>
+<body>
+  <div class="app">
+    <header class="top">
+      <div class="brand">
+        <strong>E2-lite</strong>
+        <span>迷你公众号动效工具 · 不是 E2.COOL 官方产品</span>
+      </div>
+      <div class="top-actions">
+        <button type="button" id="btn-reset" class="ghost">恢复示例</button>
+        <button type="button" id="btn-copy-wx">复制微信 SVG</button>
+        <button type="button" id="btn-dl-wx">下载微信 HTML</button>
+        <button type="button" id="btn-copy-h5" class="ghost">复制 H5</button>
+        <button type="button" id="btn-dl-h5" class="primary">下载独立 H5</button>
+      </div>
+    </header>
+
+    <aside class="side">
+      <h2>添加积木</h2>
+      <div class="block-add" id="block-add"></div>
+      <h2>图层</h2>
+      <div class="layers" id="layers"></div>
+    </aside>
+
+    <main class="stage">
+      <div class="phone">
+        <iframe id="preview" title="preview"></iframe>
+        <div class="hint">手机预览：可下滑、可捏泡泡。完整互动请用「下载独立 H5」。</div>
+      </div>
+    </main>
+
+    <aside class="props">
+      <h2>文稿信息</h2>
+      <div class="field">
+        <label>标题</label>
+        <input id="meta-title">
+      </div>
+      <div class="field">
+        <label>作者 / 公众号名</label>
+        <input id="meta-author">
+      </div>
+      <h2>选中积木</h2>
+      <div id="props-fields"></div>
+      <div class="help">
+        <p><b>和真·E2 的差别</b></p>
+        <p>E2.COOL 是商业编辑器（模板市场、认证 SVG 标准、复杂滚动时间轴）。E2-lite 是给你用的<strong>迷你版</strong>：拼积木 → 预览 → 导出。</p>
+        <p><b>怎么进公众号</b></p>
+        <p>1. <code>下载独立 H5</code> 部署到 HTTPS，推文挂「原文链接」（最稳，可捏泡泡）。</p>
+        <p>2. <code>复制微信 SVG</code> 粘进第三方编辑器 HTML 模式；微信官方后台对复杂 SVG 常会阉割，互动以 H5 为准。</p>
+        <p><a href="README.html" style="color:var(--accent)">看完整说明 →</a></p>
+      </div>
+    </aside>
+  </div>
+  <div class="toast" id="toast"></div>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
