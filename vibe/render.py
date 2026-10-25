@@ -103,10 +103,12 @@ async def capture_frames(n: int):
         await page.goto(url, wait_until="networkidle")
         # Wait for web fonts
         await page.wait_for_function("window.__vibe && window.__vibe.ready")
-        await page.wait_for_timeout(1200)
+        await page.evaluate("() => document.body.classList.add('exporting')")
+        # Wait for web fonts to settle at export scale
+        await page.wait_for_timeout(1800)
         for i in range(n):
             await page.evaluate("(n) => window.__vibe.go(n)", i)
-            await page.wait_for_timeout(450)
+            await page.wait_for_timeout(500)
             path = FRAMES / f"{i:02d}.png"
             await page.screenshot(path=str(path), full_page=False)
             print(f"frame {i+1}/{n} -> {path}", flush=True)

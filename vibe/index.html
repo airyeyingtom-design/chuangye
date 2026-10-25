@@ -28,6 +28,16 @@
       touch-action: pan-y;
     }
     body.exporting .chrome { display: none !important; }
+    body.exporting .progress { display: none !important; }
+    body.exporting, body.exporting html { background: var(--bg); }
+    body.exporting .stage {
+      width: 100vw !important;
+      height: 100vh !important;
+      max-width: none !important;
+      margin: 0 !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+    }
     .stage {
       position: relative;
       width: min(100vw, 430px);
@@ -94,6 +104,26 @@
       transition: opacity 0.55s ease, transform 0.55s ease;
       pointer-events: none;
     }
+    body.exporting .slide {
+      padding: 120px 72px 120px;
+    }
+    body.exporting .lines {
+      font-size: 64px;
+      line-height: 1.3;
+    }
+    body.exporting .kicker {
+      font-size: 22px;
+      margin-bottom: 36px;
+    }
+    body.exporting .sub {
+      font-size: 26px;
+      max-width: 22em;
+      margin-top: 36px;
+    }
+    body.exporting .list li { font-size: 28px; }
+    body.exporting .row { font-size: 28px; }
+    body.exporting .stat .n { font-size: 42px; }
+    body.exporting .stat .l { font-size: 18px; }
     .slide.on {
       opacity: 1;
       transform: translateY(0);
