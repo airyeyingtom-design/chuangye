@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <title>拍视频赚钱的底层逻辑 · vibe 知识</title>
+  <meta name="description" content="不是黄金3秒，也不是日更人设。短视频赚钱的五种游戏与六条反常识。">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@500;700;900&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #070706;
+      --fg: #f2ebe0;
+      --muted: #9a9083;
+      --accent: #c9a36a;
+      --line: rgba(242, 235, 224, 0.12);
+      --safe-b: env(safe-area-inset-bottom, 0px);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      height: 100%;
+      background: #000;
+      color: var(--fg);
+      font-family: "Noto Serif SC", "Songti SC", "SimSun", serif;
+      -webkit-font-smoothing: antialiased;
+      overflow: hidden;
+      touch-action: pan-y;
+    }
+    body.exporting .chrome { display: none !important; }
+    body.exporting .progress { display: none !important; }
+    body.exporting, body.exporting html { background: var(--bg); }
+    body.exporting .stage {
+      width: 100vw !important;
+      height: 100vh !important;
+      max-width: none !important;
+      margin: 0 !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+    }
+    .stage {
+      position: relative;
+      width: min(100vw, 430px);
+      height: 100%;
+      margin: 0 auto;
+      background:
+        radial-gradient(120% 80% at 50% -10%, rgba(201, 163, 106, 0.12), transparent 55%),
+        radial-gradient(90% 60% at 80% 110%, rgba(90, 70, 40, 0.18), transparent 50%),
+        var(--bg);
+      overflow: hidden;
+    }
+    .grain {
+      pointer-events: none;
+      position: absolute;
+      inset: 0;
+      opacity: 0.07;
+      mix-blend-mode: overlay;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+    .rail {
+      position: absolute;
+      left: 22px;
+      top: 0;
+      bottom: 0;
+      width: 1px;
+      background: linear-gradient(to bottom, transparent, var(--line) 12%, var(--line) 88%, transparent);
+    }
+    .progress {
+      position: absolute;
+      top: 14px;
+      left: 18px;
+      right: 18px;
+      display: flex;
+      gap: 4px;
+      z-index: 5;
+    }
+    .progress span {
+      flex: 1;
+      height: 2px;
+      border-radius: 2px;
+      background: rgba(242, 235, 224, 0.15);
+      overflow: hidden;
+    }
+    .progress span i {
+      display: block;
+      height: 100%;
+      width: 0%;
+      background: var(--accent);
+      border-radius: inherit;
+    }
+    .progress span.done i { width: 100%; }
+    .progress span.active i { animation: fill linear forwards; }
+    @keyframes fill { from { width: 0%; } to { width: 100%; } }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      padding: 72px 28px calc(110px + var(--safe-b));
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      opacity: 0;
+      transform: translateY(18px);
+      transition: opacity 0.55s ease, transform 0.55s ease;
+      pointer-events: none;
+    }
+    body.exporting .slide {
+      padding: 120px 72px 120px;
+    }
+    body.exporting .lines {
+      font-size: 64px;
+      line-height: 1.3;
+    }
+    body.exporting .kicker {
+      font-size: 22px;
+      margin-bottom: 36px;
+    }
+    body.exporting .sub {
+      font-size: 26px;
+      max-width: 22em;
+      margin-top: 36px;
+    }
+    body.exporting .list li { font-size: 28px; }
+    body.exporting .row { font-size: 28px; }
+    body.exporting .stat .n { font-size: 42px; }
+    body.exporting .stat .l { font-size: 18px; }
+    .slide.on {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+    .kicker {
+      font-family: "ZCOOL XiaoWei", "Noto Serif SC", serif;
+      font-size: 13px;
+      letter-spacing: 0.22em;
+      color: var(--accent);
+      margin-bottom: 22px;
+      text-transform: none;
+    }
+    .lines {
+      font-weight: 900;
+      font-size: clamp(28px, 8.2vw, 40px);
+      line-height: 1.28;
+      letter-spacing: 0.02em;
+    }
+    .lines em {
+      font-style: normal;
+      color: var(--accent);
+    }
+    .sub {
+      margin-top: 22px;
+      font-size: 15px;
+      line-height: 1.7;
+      color: var(--muted);
+      max-width: 18em;
+      font-weight: 500;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+      gap: 14px;
+      margin-top: 28px;
+    }
+    .stat {
+      border-top: 1px solid var(--line);
+      padding-top: 12px;
+    }
+    .stat .n {
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: 0.02em;
+    }
+    .stat .l {
+      margin-top: 4px;
+      font-size: 12px;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+    }
+    .list {
+      margin-top: 26px;
+      display: grid;
+      gap: 12px;
+    }
+    .list li {
+      list-style: none;
+      font-size: 16px;
+      line-height: 1.45;
+      color: var(--fg);
+      padding-left: 0;
+      border-left: 2px solid rgba(201, 163, 106, 0.45);
+      padding-left: 14px;
+    }
+    .compare {
+      margin-top: 28px;
+      display: grid;
+      gap: 10px;
+    }
+    .row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--line);
+      font-size: 16px;
+    }
+    .row .b { color: var(--accent); font-weight: 700; }
+
+    .chrome {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      padding: 16px 18px calc(18px + var(--safe-b));
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      background: linear-gradient(to top, rgba(7,7,6,0.95), transparent);
+      z-index: 6;
+    }
+    .btn {
+      appearance: none;
+      border: 1px solid rgba(242, 235, 224, 0.22);
+      background: rgba(242, 235, 224, 0.04);
+      color: var(--fg);
+      font: inherit;
+      font-size: 13px;
+      letter-spacing: 0.12em;
+      padding: 12px 16px;
+      border-radius: 999px;
+      cursor: pointer;
+    }
+    .btn.primary {
+      background: var(--fg);
+      color: #111;
+      border-color: var(--fg);
+      font-weight: 700;
+    }
+    .hint {
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.16em;
+    }
+    .count {
+      font-variant-numeric: tabular-nums;
+      font-size: 12px;
+      color: var(--muted);
+      letter-spacing: 0.12em;
+    }
+    .tap-zones {
+      position: absolute;
+      inset: 48px 0 90px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      z-index: 4;
+    }
+    .tap-zones button {
+      border: 0;
+      background: transparent;
+      cursor: pointer;
+    }
+    @media (min-width: 500px) {
+      body { display: grid; place-items: center; }
+      .stage {
+        height: min(100vh, 860px);
+        border-radius: 28px;
+        box-shadow: 0 0 0 1px rgba(255,255,255,0.06), 0 30px 80px rgba(0,0,0,0.55);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="stage" id="stage">
+    <div class="grain"></div>
+    <div class="rail" aria-hidden="true"></div>
+    <div class="progress" id="progress" aria-hidden="true"></div>
+    <div id="slides"></div>
+    <div class="tap-zones chrome">
+      <button type="button" id="prevZone" aria-label="上一页"></button>
+      <button type="button" id="nextZone" aria-label="下一页"></button>
+    </div>
+    <div class="chrome">
+      <button class="btn" id="prevBtn" type="button">上一页</button>
+      <div style="text-align:center">
+        <div class="count" id="count">01 / 15</div>
+        <div class="hint" id="hint">轻点右侧翻页 · 可打赏收藏</div>
+      </div>
+      <button class="btn primary" id="playBtn" type="button">播放</button>
+    </div>
+  </div>
+  <script src="slides.js"></script>
+  <script>
+    const slides = window.VIBE_SLIDES;
+    const root = document.getElementById("slides");
+    const progress = document.getElementById("progress");
+    const countEl = document.getElementById("count");
+    const playBtn = document.getElementById("playBtn");
+    const hint = document.getElementById("hint");
+    let i = 0;
+    let playing = false;
+    let timer = null;
+    const DURATION = 4200;
+
+    function esc(s) {
+      return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+
+    function renderSlide(s, idx) {
+      const el = document.createElement("section");
+      el.className = "slide" + (idx === 0 ? " on" : "");
+      el.dataset.index = idx;
+      let html = `<div class="kicker">${esc(s.kicker || "")}</div>`;
+      html += `<div class="lines">${s.lines.map(l => `<div>${esc(l)}</div>`).join("")}</div>`;
+      if (s.stats) {
+        html += `<div class="stats">${s.stats.map(st =>
+          `<div class="stat"><div class="n">${esc(st.n)}</div><div class="l">${esc(st.l)}</div></div>`
+        ).join("")}</div>`;
+      }
+      if (s.compare) {
+        html += `<div class="compare">${s.compare.map(r =>
+          `<div class="row"><span>${esc(r.a)}</span><span class="b">${esc(r.b)}</span></div>`
+        ).join("")}</div>`;
+      }
+      if (s.list) {
+        html += `<ul class="list">${s.list.map(x => `<li>${esc(x)}</li>`).join("")}</ul>`;
+      }
+      if (s.sub) html += `<p class="sub">${esc(s.sub)}</p>`;
+      el.innerHTML = html;
+      return el;
+    }
+
+    slides.forEach((s, idx) => {
+      root.appendChild(renderSlide(s, idx));
+      const bar = document.createElement("span");
+      if (idx === 0) bar.classList.add("active");
+      bar.innerHTML = "<i></i>";
+      progress.appendChild(bar);
+    });
+
+    const nodes = [...root.querySelectorAll(".slide")];
+    const bars = [...progress.querySelectorAll("span")];
+
+    function go(n, {auto} = {}) {
+      i = (n + slides.length) % slides.length;
+      nodes.forEach((el, idx) => el.classList.toggle("on", idx === i));
+      bars.forEach((b, idx) => {
+        b.classList.toggle("done", idx < i);
+        b.classList.toggle("active", idx === i && playing);
+        const fill = b.querySelector("i");
+        fill.style.animation = "none";
+        fill.offsetHeight;
+        if (idx === i && playing) {
+          fill.style.animation = `fill ${DURATION}ms linear forwards`;
+        } else if (idx < i) {
+          fill.style.width = "100%";
+        } else {
+          fill.style.width = "0%";
+        }
+      });
+      countEl.textContent = String(i + 1).padStart(2, "0") + " / " + String(slides.length).padStart(2, "0");
+      if (auto && playing) schedule();
+    }
+
+    function schedule() {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        if (i >= slides.length - 1) {
+          stop();
+          hint.textContent = "完 · 收藏再看一遍";
+          return;
+        }
+        go(i + 1, {auto: true});
+      }, DURATION);
+    }
+
+    function play() {
+      playing = true;
+      playBtn.textContent = "暂停";
+      hint.textContent = "正在讲述 · 轻点可暂停";
+      go(i, {auto: true});
+    }
+    function stop() {
+      playing = false;
+      clearTimeout(timer);
+      playBtn.textContent = i >= slides.length - 1 ? "重播" : "继续";
+      bars[i]?.classList.remove("active");
+    }
+
+    playBtn.addEventListener("click", () => {
+      if (playing) { stop(); hint.textContent = "已暂停"; return; }
+      if (i >= slides.length - 1) go(0);
+      play();
+    });
+    document.getElementById("prevBtn").addEventListener("click", () => { stop(); go(i - 1); });
+    document.getElementById("prevZone").addEventListener("click", () => { stop(); go(i - 1); });
+    document.getElementById("nextZone").addEventListener("click", () => {
+      stop();
+      if (i >= slides.length - 1) return;
+      go(i + 1);
+    });
+
+    let touchX = 0;
+    stage.addEventListener("touchstart", e => { touchX = e.changedTouches[0].clientX; }, {passive: true});
+    stage.addEventListener("touchend", e => {
+      const dx = e.changedTouches[0].clientX - touchX;
+      if (Math.abs(dx) < 40) return;
+      stop();
+      go(dx < 0 ? i + 1 : i - 1);
+    }, {passive: true});
+
+    // Export helpers for headless render
+    window.__vibe = {
+      count: () => slides.length,
+      go: (n) => { document.body.classList.add("exporting"); stop(); go(n); },
+      slide: (n) => slides[n],
+      ready: true
+    };
+  </script>
+</body>
+</html>
