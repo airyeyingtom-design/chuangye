@@ -39,7 +39,7 @@
   // —— Subtitles: [start, end, zh, en] ——
   const SUBS = [
     [0.4, 3.2, "有人一条视频赚几百，有人赚几万", "Some make hundreds. Some make tens of thousands."],
-    [3.3, 6.2, "差别，不在镜头——在玩的游戏不同", "The gap isn’t the lens. It’s the game."],
+    [3.3, 6.2, "差别，不在镜头——在玩的游戏不同", "The gap isn't the lens. It's the game."],
     [14.2, 17.2, "短视频越火，摄影师未必越赚钱", "More short video ≠ more pay for shooters."],
     [17.3, 20.8, "观看的人更多，生产门槛却更低", "More viewers. Lower production barrier."],
     [21.0, 24.6, "拍视频赚钱，其实是五种完全不同的游戏", "Making money with video is five different games."],
@@ -54,7 +54,7 @@
     [57.6, 61.6, "商业短视频的作用之一：减少购买阻力", "One job of commercial video: cut friction."],
     [61.8, 66.0, "一条视频，可以不只卖一次", "One video can sell more than once."],
     [66.2, 70.4, "制作费 · 发布费 · 广告授权 · 原素材——分开谈", "Fee · Posting · Ad rights · Raws—name each."],
-    [70.6, 74.8, "付款拍摄 ≠ 版权与商用自动全部转让", "Paying for a shoot ≠ owning every right."],
+    [70.6, 74.8, "付款拍摄 ≠ 版权与商用自动全部转让", "Paying for a shoot != owning every right."],
     [75.0, 79.2, "真正昂贵的，可能是「进入现场的资格」", "What’s scarce: permission to enter the room."],
     [79.4, 83.6, "AI能生成豪华餐厅，却替代不了真实后厨", "AI can fake luxury. Not a real kitchen."],
     [83.8, 88.0, "护城河从「制造画面」迁到「真实记录」", "Moat shifts: inventing shots → recording truth."],
@@ -234,7 +234,7 @@
     ctx.textBaseline = "alphabetic";
     ctx.fillText(zh, W/2, H - 92);
     ctx.fillStyle = C.mute;
-    ctx.font = "italic 400 20px 'Noto Serif SC', serif";
+    ctx.font = "italic 500 24px 'Noto Serif SC', serif";
     ctx.fillText(en, W/2, H - 52);
     ctx.globalAlpha = 1;
   }
