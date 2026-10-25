@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>拍视频赚钱的底层逻辑 · VIBE知识大赏</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@500;700&family=Noto+Serif+SC:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    html, body {
+      margin: 0; height: 100%; background: #050510; overflow: hidden;
+      display: grid; place-items: center;
+    }
+    canvas { width: 100vw; height: auto; max-height: 100vh; background: #050510; }
+  </style>
+</head>
+<body>
+  <canvas id="c" width="1920" height="1080"></canvas>
+  <script src="film.js"></script>
+  <script>
+    const canvas = document.getElementById("c");
+    const ctx = canvas.getContext("2d");
+    let playing = false, t0 = 0, acc = 0;
+    function loop(now) {
+      if (!playing) return;
+      const t = acc + (now - t0) / 1000;
+      window.render(ctx, Math.min(t, window.DURATION));
+      if (t < window.DURATION) requestAnimationFrame(loop);
+    }
+    window.seek = (t) => { window.render(ctx, t); };
+    window.play = () => {
+      playing = true; t0 = performance.now(); acc = 0;
+      requestAnimationFrame(loop);
+    };
+    document.fonts.ready.then(() => {
+      window.render(ctx, 0.1);
+      window.__ready = true;
+    });
+    canvas.addEventListener("click", () => {
+      if (!playing) window.play();
+    });
+  </script>
+</body>
+</html>
